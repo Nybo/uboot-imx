@@ -624,6 +624,14 @@ config TARGET_MX6ULL_14X14_EVK
 	select DM_THERMAL
 	select MX6ULL
 	imply CMD_DM
+	
+config TARGET_MX6ULL_PEPPER
+	bool "Support mx6ull_pepper"
+	select BOARD_LATE_INIT
+	select DM
+	select DM_THERMAL
+	select MX6ULL
+	imply CMD_DM	
 
 config TARGET_NITROGEN6X
 	bool "nitrogen6x"
