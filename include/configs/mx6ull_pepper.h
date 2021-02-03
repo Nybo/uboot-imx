@@ -3,8 +3,8 @@
  * Copyright (C) 2013 Gumstix, Inc. - http://www.gumstix.com/
  */
 
-#ifndef __CONFIG_PEPPER_H
-#define __CONFIG_PEPPER_H
+#ifndef __CONFIG_MX6ULL_pepper_H
+#define __CONFIG_MX6ULL_pepper_H
 
 #include <configs/ti_am335x_common.h>
 
@@ -75,4 +75,4 @@
 
 /* SPL */
 
-#endif /* __CONFIG_PEPPER_H */
+#endif /* __CONFIG_MX6ULL_PEPPER_H */
