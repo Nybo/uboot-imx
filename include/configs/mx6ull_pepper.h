@@ -1,17 +1,17 @@
 /* SPDX-License-Identifier: GPL-2.0+ */
 /*
- * Copyright (C) 2016 Freescale Semiconductor, Inc.
- * Copyright 2017 NXP
+ * Copyright (C) 2015 Freescale Semiconductor, Inc.
+ * Copyright (C) 2016 Grinn
  *
- * Configuration settings for the Freescale i.MX6UL 14x14 EVK board.
+ * Configuration settings for the Grinn liteBoard (i.MX6UL).
  */
 #ifndef __MX6ULL_PEPPER_CONFIG_H
 #define __MX6ULL_PEPPER_CONFIG_H
 
+
 #include <asm/arch/imx-regs.h>
 #include <linux/sizes.h>
 #include "mx6_common.h"
-#include <asm/mach-imx/gpio.h>
 
 /* SPL options */
 #include "imx6_spl.h"
@@ -25,56 +25,88 @@
 /* MMC Configs */
 #ifdef CONFIG_FSL_USDHC
 #define CONFIG_SYS_FSL_ESDHC_ADDR	USDHC1_BASE_ADDR
+#endif
 
-#define CONFIG_SYS_FSL_USDHC_NUM	1
-#endif /* CONFIG_FSL_USDHC */
-
-#define CONFIG_CMD_READ
+#define CONFIG_SYS_MMC_IMG_LOAD_PART	1
 
 #define CONFIG_EXTRA_ENV_SETTINGS \
-	"bootm_size=0x10000000\0" \
-	"console=ttymxc0\0" \
-	"initrd_addr=0x86800000\0" \
-	"fdt_addr=0x83000000\0" \
 	"script=boot.scr\0" \
 	"image=zImage\0" \
-	"splashimage=0x80000000\0" \
-	"splashfile=/boot/splash.bmp\0" \
-	"mmcdev=0\0" \
-	"mmcpart=1\0" \
-	"mmcroot=/dev/mmcblk0p1 rootwait rw\0" \
-	"setrootmmc=setenv rootspec root=${mmcroot}\0" \
-	"setbootscriptmmc=setenv loadbootscript " \
-		"load mmc ${mmcdev}:${mmcpart} " \
-		"${loadaddr} /boot/${script};\0" \
-	"setloadmmc=setenv loadimage load mmc ${mmcdev}:${mmcpart} " \
-		"${loadaddr} /boot/${image}; " \
-		"setenv loadfdt load mmc ${mmcdev}:${mmcpart} " \
-		"${fdt_addr} /boot/${fdt_file};\0" \
-	"setbootargs=setenv bootargs console=${console},${baudrate} " \
-		"${rootspec}\0" \
-	"execbootscript=echo Running bootscript...; source\0" \
-	"setfdtfile=setenv fdt_file imx6ull-pepper.dtb\0" \
-	"checkbootdev=run setbootscriptmmc; " \
-		"run setrootmmc; " \
-		"run setloadmmc; " \
+	"console=ttymxc0\0" \
+	"fdt_high=0xffffffff\0" \
+	"initrd_high=0xffffffff\0" \
+	"fdt_file=" CONFIG_DEFAULT_FDT_FILE "\0" \
+	"fdt_addr=0x83000000\0" \
+	"boot_fdt=try\0" \
+	"ip_dyn=yes\0" \
+	"mmcdev="__stringify(CONFIG_SYS_MMC_ENV_DEV)"\0" \
+	"mmcpart=" __stringify(CONFIG_SYS_MMC_IMG_LOAD_PART) "\0" \
+	"mmcroot=" CONFIG_MMCROOT " rootwait rw\0" \
+	"mmcautodetect=yes\0" \
+	"mmcargs=setenv bootargs console=${console},${baudrate} " \
+		"root=${mmcroot}\0" \
+	"loadbootscript=" \
+		"fatload mmc ${mmcdev}:${mmcpart} ${loadaddr} ${script};\0" \
+	"bootscript=echo Running bootscript from mmc ...; " \
+		"source\0" \
+	"loadimage=fatload mmc ${mmcdev}:${mmcpart} ${loadaddr} ${image}\0" \
+	"loadfdt=fatload mmc ${mmcdev}:${mmcpart} ${fdt_addr} ${fdt_file}\0" \
+	"mmcboot=echo Booting from mmc ...; " \
+		"run mmcargs; " \
+		"if test ${boot_fdt} = yes || test ${boot_fdt} = try; then " \
+			"if run loadfdt; then " \
+				"bootz ${loadaddr} - ${fdt_addr}; " \
+			"else " \
+				"if test ${boot_fdt} = try; then " \
+					"bootz; " \
+				"else " \
+					"echo WARN: Cannot load the DT; " \
+				"fi; " \
+			"fi; " \
+		"else " \
+			"bootz; " \
+		"fi;\0" \
+	"netargs=setenv bootargs console=${console},${baudrate} " \
+		"root=/dev/nfs " \
+	"ip=dhcp nfsroot=${serverip}:${nfsroot},v3,tcp\0" \
+	"netboot=echo Booting from net ...; " \
+		"run netargs; " \
+		"if test ${ip_dyn} = yes; then " \
+			"setenv get_cmd dhcp; " \
+		"else " \
+			"setenv get_cmd tftp; " \
+		"fi; " \
+		"${get_cmd} ${image}; " \
+		"if test ${boot_fdt} = yes || test ${boot_fdt} = try; then " \
+			"if ${get_cmd} ${fdt_addr} ${fdt_file}; then " \
+				"bootz ${loadaddr} - ${fdt_addr}; " \
+			"else " \
+				"if test ${boot_fdt} = try; then " \
+					"bootz; " \
+				"else " \
+					"echo WARN: Cannot load the DT; " \
+				"fi; " \
+			"fi; " \
+		"else " \
+			"bootz; " \
+		"fi;\0"
 
 #define CONFIG_BOOTCOMMAND \
-	"run setfdtfile; " \
-	"run checkbootdev; " \
-	"run loadfdt;" \
-	"if run loadbootscript; then " \
-		"run bootscript; " \
-	"else " \
-		"if run loadimage; then " \
-			"run setbootargs; " \
-			"bootz ${loadaddr} - ${fdt_addr}; " \
-		"fi; " \
-	"fi"
+	   "mmc dev ${mmcdev};" \
+	   "if mmc rescan; then " \
+		   "if run loadbootscript; then " \
+			   "run bootscript; " \
+		   "else " \
+			   "if run loadimage; then " \
+				   "run mmcboot; " \
+			   "else run netboot; " \
+			   "fi; " \
+		   "fi; " \
+	   "else run netboot; fi"
 
 /* Miscellaneous configurable options */
 #define CONFIG_SYS_MEMTEST_START	0x80000000
-#define CONFIG_SYS_MEMTEST_END		(CONFIG_SYS_MEMTEST_START + 0x8000000)
+#define CONFIG_SYS_MEMTEST_END		(CONFIG_SYS_MEMTEST_START + SZ_128M)
 
 #define CONFIG_SYS_LOAD_ADDR		CONFIG_LOADADDR
 #define CONFIG_SYS_HZ			1000
@@ -91,19 +123,30 @@
 #define CONFIG_SYS_INIT_SP_ADDR \
 	(CONFIG_SYS_INIT_RAM_ADDR + CONFIG_SYS_INIT_SP_OFFSET)
 
-/* environment organization */
-#define CONFIG_SYS_MMC_ENV_DEV		0	/* USDHC2 */
-#define CONFIG_SYS_MMC_ENV_PART		0	/* user area */
+/* FLASH and environment organization */
+#define CONFIG_SYS_MMC_ENV_DEV		0
+#define CONFIG_SYS_MMC_ENV_PART		0
+#define CONFIG_MMCROOT			"/dev/mmcblk0p2"
 
 /* USB Configs */
 #ifdef CONFIG_CMD_USB
 #define CONFIG_EHCI_HCD_INIT_AFTER_RESET
 #define CONFIG_MXC_USB_PORTSC  (PORT_PTS_UTMI | PORT_PTS_PTW)
 #define CONFIG_MXC_USB_FLAGS   0
-#define CONFIG_USB_MAX_CONTROLLER_COUNT 2
+#define CONFIG_USB_MAX_CONTROLLER_COUNT 1
 #endif
 
+#ifdef CONFIG_CMD_NET
+#define CONFIG_FEC_MXC
+#define CONFIG_FEC_ENET_DEV		0
 
+#define IMX_FEC_BASE			ENET_BASE_ADDR
+#define CONFIG_FEC_MXC_PHYADDR		0x0
+#define CONFIG_FEC_XCV_TYPE		RMII
+#define CONFIG_ETHPRIME			"FEC"
+
+#define CONFIG_PHY_SMSC
+#endif
 
 #define CONFIG_IMX_THERMAL
 
