@@ -10,7 +10,7 @@
 
 / {
 	model = "i.MX6 ULL Pepper Board";
-	compatible = "fsl,imx6ull-14x14-evk", "fsl,imx6ull";
+	compatible = "nybo,imx6ull-pepper", "fsl,imx6ull";
 };
 
 &clks {
