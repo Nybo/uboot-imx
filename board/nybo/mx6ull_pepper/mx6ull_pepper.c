@@ -255,7 +255,7 @@ int board_phy_config(struct phy_device *phydev)
 #ifdef CONFIG_DM_VIDEO
 static iomux_v3_cfg_t const lcd_pads[] = {
 	/* Use GPIO for Brightness adjustment, duty cycle = period. */
-	MX6_PAD_GPIO1_IO08__GPIO1_IO08 | MUX_PAD_CTRL(NO_PAD_CTRL),
+	MX6_PAD_CSI_VSYNC__GPIO4_IO19 | MUX_PAD_CTRL(NO_PAD_CTRL),
 };
 
 static int setup_lcd(void)
@@ -265,14 +265,14 @@ static int setup_lcd(void)
 	imx_iomux_v3_setup_multiple_pads(lcd_pads, ARRAY_SIZE(lcd_pads));
 
 	/* Reset the LCD */
-	gpio_request(IMX_GPIO_NR(5, 9), "lcd reset");
-	gpio_direction_output(IMX_GPIO_NR(5, 9) , 0);
+	gpio_request(IMX_GPIO_NR(3, 4), "lcd reset");
+	gpio_direction_output(IMX_GPIO_NR(3, 4) , 0);
 	udelay(500);
-	gpio_direction_output(IMX_GPIO_NR(5, 9) , 1);
+	gpio_direction_output(IMX_GPIO_NR(3, 4) , 1);
 
 	/* Set Brightness to high */
-	gpio_request(IMX_GPIO_NR(1, 8), "backlight");
-	gpio_direction_output(IMX_GPIO_NR(1, 8) , 1);
+	gpio_request(IMX_GPIO_NR(4, 19), "backlight");
+	gpio_direction_output(IMX_GPIO_NR(4, 19) , 1);
 
 	return 0;
 }
