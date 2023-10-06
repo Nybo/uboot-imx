@@ -255,7 +255,7 @@ int board_phy_config(struct phy_device *phydev)
 #ifdef CONFIG_DM_VIDEO
 static iomux_v3_cfg_t const lcd_pads[] = {
 	/* Use GPIO for Brightness adjustment, duty cycle = period. */
-	MX6_PAD_CSI_VSYNC__GPIO2_IO00 | MUX_PAD_CTRL(NO_PAD_CTRL),
+	//MX6_PAD_CSI_VSYNC__GPIO2_IO00 | MUX_PAD_CTRL(NO_PAD_CTRL),
 };
 
 static int setup_lcd(void)
